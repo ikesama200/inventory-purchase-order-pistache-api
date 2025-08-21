@@ -10,7 +10,7 @@ CREATE DATABASE inventory_purchase_order
 -- テーブル: categories_master
 CREATE TABLE categories_master (
     category_id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
+    category_name VARCHAR(100) NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -65,7 +65,7 @@ CREATE TABLE code_master (
     code_category VARCHAR(50) NOT NULL,
     code_value VARCHAR(50) NOT NULL,
     code_name VARCHAR(100) NOT NULL,
-    description TEXT,
+    code_description TEXT,
     sort_order INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
