@@ -45,8 +45,8 @@ public:
 
     void init(size_t threads = 2) {
         auto opts = Http::Endpoint::options()
-                        .threads(static_cast<int>(threads))  // flags 削除
-                        .flags(Tcp::Options::InstallSignalHandler);
+                        .threads(static_cast<int>(threads));  // flags 削除
+                        //.flags(Tcp::Options::InstallSignalHandler);
         httpEndpoint->init(opts);
         setupRoutes();
     }
