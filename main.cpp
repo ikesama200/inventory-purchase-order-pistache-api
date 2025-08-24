@@ -40,7 +40,7 @@ std::string loadSqlFile(const std::string &filename) {
 
 class ApiHandler {
 public:
-    explicit HelloHandler(Address addr) : httpEndpoint(std::make_shared<Http::Endpoint>(addr)) {}
+    //explicit HelloHandler(Address addr) : httpEndpoint(std::make_shared<Http::Endpoint>(addr)) {}
     explicit ApiHandler(Address addr) : httpEndpoint(std::make_shared<Http::Endpoint>(addr)) {}
 
     void init(size_t threads = 2) {
