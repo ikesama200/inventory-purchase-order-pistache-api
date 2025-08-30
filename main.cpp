@@ -39,35 +39,24 @@ std::string loadSqlQuery(const std::string& filepath) {
     return buffer.str();
 }
 
+// PostgreSQLの接続情報の読み込み
+std::string makeConnStr(const std::unordered_map<std::string, std::string>& config) {
+    return "dbname=" + config.at("dbname") +
+           " user=" + config.at("user") +
+           " password=" + config.at("password") +
+           " host=" + config.at("host") +
+           " port=" + config.at("port");
+}
+
 class ApiHandler {
 public:
     explicit ApiHandler(const std::unordered_map<std::string, std::string>& config)
-        : connStr("dbname=" + config.at("dbname") +
-                  " user=" + config.at("user") +
-                  " password=" + config.at("password") +
-                  " host=" + config.at("host") +
-                  " port=" + config.at("port")) {}
-
-/*
-    void init(size_t threads = 2) {
-        auto opts = Http::Endpoint::options()
-                        .threads(static_cast<int>(threads));  // flags 削除
-        httpEndpoint->init(opts);
-        setupRoutes();
-    }
-
-    void start() {
-        httpEndpoint->setHandler(router.handler());
-        httpEndpoint->serve();
-    }
-
-    void shutdown() { httpEndpoint->shutdown(); }
-*/
+        : conn(makeConnStr(config))  // ← DB接続文字列を渡して接続確立
+        {}
     // SELECT
     void handleSelect(const Rest::Request&, Http::ResponseWriter response) {
         try {
             std::string query = loadSqlQuery("sql/select.sql");
-            pqxx::connection conn(connStr);
             pqxx::work txn(conn);
             pqxx::result r = txn.exec(query);
             txn.commit();
@@ -98,7 +87,6 @@ public:
             // 例: {"name":"Taro","age":30}
             std::string query = loadSqlQuery("sql/insert.sql");
 
-            pqxx::connection conn(connStr);
             pqxx::work txn(conn);
             txn.exec_params(query, body);  // ⚠️ 本来はJSONパースして個別の値をセットする
             txn.commit();
@@ -119,7 +107,6 @@ public:
             std::string name = body["name"];
             int age = body["age"];
 
-            pqxx::connection conn(connStr);
             pqxx::work txn(conn);
             //txn.exec_params(query, body);  // ⚠️ JSONから値を抜き出す処理を追加予定
             txn.exec_params(sql, name, age, id);
@@ -137,7 +124,6 @@ public:
             auto body = request.body();
             std::string query = loadSqlQuery("sql/delete.sql");
 
-            pqxx::connection conn(connStr);
             pqxx::work txn(conn);
             txn.exec_params(query, body);  // ⚠️ JSONから値を抜き出す処理を追加予定
             txn.commit();
@@ -163,10 +149,9 @@ public:
                 " password=" + config["password"];
 
             // 外部 SQL 読み込み
-            // std::string sql = loadSqlFile("query.sql");
-            std::string sql = "SELECT * FROM categories_master;";
+            std::string sql = loadSqlFile("sql/select_category.sql");
+            // std::string sql = "SELECT * FROM categories_master;";
 
-            pqxx::connection conn(connStr);
             pqxx::work txn(conn);
 
             pqxx::result r = txn.exec(sql);
