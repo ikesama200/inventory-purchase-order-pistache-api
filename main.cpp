@@ -197,6 +197,7 @@ public:
 
 private:
     std::string connStr;
+    pqxx::connection conn;
 };
 
 int main() {
