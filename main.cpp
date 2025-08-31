@@ -54,8 +54,9 @@ public:
         : conn(makeConnStr(config))  // ← DB接続文字列を渡して接続確立
         {}
     // 共通関数: SQLファイルを指定してselctを実行
-    Rest::Route::Result handleSelect(const Rest::Request&,
-                                    Http::ResponseWriter response) {
+    Rest::Route::Result handleSelect(const std::string& sqlFile,
+                                    const Rest::Request& request,
+                                    Http::ResponseWriter response){
         try {
             std::string query = loadSqlQuery(sqlFile);
             pqxx::work txn(conn);
@@ -69,13 +70,15 @@ public:
                 }
                 result.push_back(obj);
             }
+
             response.send(Http::Code::Ok, result.dump(), MIME(Application, Json));
-            return Rest::Route::Result::Ok;  // 型で返す
         } catch (const std::exception& e) {
             response.send(Http::Code::Internal_Server_Error, e.what());
-            return Rest::Route::Result::Ok;  // 型で返す
         }
+
+        return Rest::Route::Result::Ok();
     }
+
 
     // カテゴリマスタ全件取得
     void getCategory(const Rest::Request&, Http::ResponseWriter response) {
@@ -212,29 +215,11 @@ int main() {
     // };
     // 汎用的なラムダ生成関数
     auto makeSelectRoute = [&](const std::string& sqlFile) {
-        return [&, sqlFile](const Rest::Request& req, Http::ResponseWriter res)
-            -> Rest::Route::Result {
-            try {
-                std::string query = loadSqlQuery(sqlFile);
-                pqxx::work txn(handler.conn);  // conn を public or getter にする
-                pqxx::result r = txn.exec(query);
-
-                json result = json::array();
-                for (auto row : r) {
-                    json obj;
-                    for (auto field : row) {
-                        obj[field.name()] = field.c_str() ? field.c_str() : "";
-                    }
-                    result.push_back(obj);
-                }
-                res.send(Http::Code::Ok, result.dump(), MIME(Application, Json));
-                return Rest::Route::Result::Ok;  // 型として返す
-            } catch (const std::exception& e) {
-                res.send(Http::Code::Internal_Server_Error, e.what());
-                return Rest::Route::Result::Ok;
-            }
+        return [&, sqlFile](const Rest::Request& req, Http::ResponseWriter res) {
+            return handler.handleSelect(sqlFile, req, std::move(res));
         };
     };
+
 
     // テーブル情報取得API
     // Rest::Routes::Get(router, "/get-category", Rest::Routes::bind(&ApiHandler::getCategory, &handler));
