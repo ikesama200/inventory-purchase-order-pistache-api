@@ -96,7 +96,7 @@ public:
                 }
                 result.push_back(obj);
             }
-            response.send(Http::Code::Ok, result.str(), MIME(Application, Json));
+            response.send(Http::Code::Ok, result.dump(), MIME(Application, Json));
         } catch (const std::exception& e) {
             response.send(Http::Code::Internal_Server_Error, e.what());
         }
@@ -131,7 +131,7 @@ public:
 
             pqxx::work txn(conn);
             //txn.exec_params(query, body);  // ⚠️ JSONから値を抜き出す処理を追加予定
-            txn.exec_params(sql, name, age, id);
+            txn.exec_params(query, name, age, id);
             txn.commit();
 
             response.send(Http::Code::Ok, "Update successful");
@@ -171,7 +171,7 @@ public:
                 " password=" + config["password"];
 
             // 外部 SQL 読み込み
-            std::string sql = loadSqlFile("sql/select_category.sql");
+            std::string sql = loadSqlQuery("sql/select_category.sql");
             // std::string sql = "SELECT * FROM categories_master;";
 
             pqxx::work txn(conn);
@@ -213,7 +213,7 @@ int main() {
     // テーブル書き込みAPI
 
     // samapleAPI
-    Rest::Routes::Get(router, "/hello", Routes::bind(&ApiHandler::handleHello, &handler));
+    Rest::Routes::Get(router, "/hello", Rest::Routes::bind(&ApiHandler::handleHello, &handler));
     //Rest::Routes::Get(router, "/data", Routes::bind(&ApiHandler::handleQuery, this));
     Rest::Routes::Get(router, "/data", Rest::Routes::bind(&ApiHandler::handleSelect, &handler));
     Rest::Routes::Post(router, "/insert", Rest::Routes::bind(&ApiHandler::handleInsert, &handler));
