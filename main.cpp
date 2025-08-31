@@ -80,6 +80,28 @@ public:
         }
     }
 
+    // カテゴリマスタ全件取得
+    void getCategory(const Rest::Request&, Http::ResponseWriter response) {
+        try {
+            std::string query = loadSqlQuery("sql/select_category.sql");
+            pqxx::work txn(conn);
+            pqxx::result r = txn.exec(query);
+            // txn.commit(); // select処理なのでコメントアウト
+
+            json result = json::array();
+            for (auto row : r) {
+                json obj;
+                for (auto field : row) {
+                    obj[field.name()] = field.c_str() ? field.c_str() : "";
+                }
+                result.push_back(obj);
+            }
+            response.send(Http::Code::Ok, result.str(), MIME(Application, Json));
+        } catch (const std::exception& e) {
+            response.send(Http::Code::Internal_Server_Error, e.what());
+        }
+    }
+
     // INSERT
     void handleInsert(const Rest::Request& request, Http::ResponseWriter response) {
         try {
@@ -174,12 +196,6 @@ public:
     }
 
 private:
-    void setupRoutes() {
-        using namespace Rest;
-        Routes::Get(router, "/hello", Routes::bind(&ApiHandler::handleHello, this));
-        Routes::Get(router, "/data", Routes::bind(&ApiHandler::handleQuery, this));
-    }
-
     std::string connStr;
 };
 
@@ -190,6 +206,12 @@ int main() {
     Rest::Router router;
     ApiHandler handler(config);
 
+    // テーブル情報取得API
+    Rest::Routes::Get(router, "/get-category", Rest::Routes::bind(&ApiHandler::getCategory, &handler));
+
+    // テーブル書き込みAPI
+
+    // samapleAPI
     Rest::Routes::Get(router, "/hello", Routes::bind(&ApiHandler::handleHello, &handler));
     //Rest::Routes::Get(router, "/data", Routes::bind(&ApiHandler::handleQuery, this));
     Rest::Routes::Get(router, "/data", Rest::Routes::bind(&ApiHandler::handleSelect, &handler));
