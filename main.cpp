@@ -54,8 +54,9 @@ public:
         : conn(makeConnStr(config))  // ← DB接続文字列を渡して接続確立
         {}
     // 共通関数: SQLファイルを指定してselctを実行
-    void handleSelect(const std::string& sqlFile, 
-                      const Rest::Request&, Http::ResponseWriter response) {
+    Rest::Route::Result handleSelect(const std::string& sqlFile,
+                                    const Rest::Request&,
+                                    Http::ResponseWriter response) {
         try {
             std::string query = loadSqlQuery(sqlFile);
             pqxx::work txn(conn);
@@ -70,8 +71,10 @@ public:
                 result.push_back(obj);
             }
             response.send(Http::Code::Ok, result.dump(), MIME(Application, Json));
+            return Rest::Route::Result::Ok;  // 型で返す
         } catch (const std::exception& e) {
             response.send(Http::Code::Internal_Server_Error, e.what());
+            return Rest::Route::Result::Ok;  // 型で返す
         }
     }
 
@@ -209,12 +212,11 @@ int main() {
     //     };
     // };
     // 汎用的なラムダ生成関数
-    // handleSelect を変更せずにラムダ側で対応する方法
     auto makeSelectRoute = [&](const std::string& sqlFile)
         -> std::function<Rest::Route::Result(const Rest::Request&, Http::ResponseWriter)> {
-        return [&, sqlFile](const Rest::Request& req, Http::ResponseWriter res) -> Rest::Route::Result {
-            handler.handleSelect(sqlFile, req, std::move(res));
-            return Rest::Route::Result::Ok();
+        return [&, sqlFile](const Rest::Request& req, Http::ResponseWriter res)
+            -> Rest::Route::Result {
+            return handler.handleSelect(sqlFile, req, std::move(res));
         };
     };
 
