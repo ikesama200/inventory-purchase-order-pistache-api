@@ -53,30 +53,32 @@ public:
     explicit ApiHandler(const std::unordered_map<std::string, std::string>& config)
         : conn(makeConnStr(config))  // ← DB接続文字列を渡して接続確立
         {}
-    // 共通関数: SQLファイルを指定してselctを実行
-    void handleSelect(const std::string& sqlFile, const Rest::Request& request, Http::ResponseWriter response)
-    {
+    // SELECT
+    void handleSelect(const Rest::Request&, Http::ResponseWriter response) {
         try {
-            std::string query = loadSqlQuery(sqlFile);
+            std::string query = loadSqlQuery("sql/select.sql");
             pqxx::work txn(conn);
             pqxx::result r = txn.exec(query);
+            txn.commit();
 
-            json result = json::array();
-            for (auto row : r) {
-                json obj;
-                for (auto field : row) {
-                    obj[field.name()] = field.c_str() ? field.c_str() : "";
+            std::stringstream ss;
+            ss << "[";
+            for (auto row = r.begin(); row != r.end(); ++row) {
+                if (row != r.begin()) ss << ",";
+                ss << "{";
+                for (auto field = row.begin(); field != row.end(); ++field) {
+                    if (field != row.begin()) ss << ",";
+                    ss << "\"" << field.name() << "\":\"" << field.c_str() << "\"";
                 }
-                result.push_back(obj);
+                ss << "}";
             }
+            ss << "]";
 
-            response.send(Http::Code::Ok, result.dump(), MIME(Application, Json));
-
+            response.send(Http::Code::Ok, ss.str(), MIME(Application, Json));
         } catch (const std::exception& e) {
             response.send(Http::Code::Internal_Server_Error, e.what());
         }
     }
-
 
     // カテゴリマスタ全件取得
     void getCategory(const Rest::Request&, Http::ResponseWriter response) {
