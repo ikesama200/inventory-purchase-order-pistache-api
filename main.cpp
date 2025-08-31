@@ -209,19 +209,20 @@ int main() {
     //     };
     // };
     // 汎用的なラムダ生成関数
-    auto makeSelectRoute = [&](const std::string& sqlFile) {
+    auto makeSelectRoute = [&](const std::string& sqlFile) -> std::function<void(const Rest::Request&, Http::ResponseWriter)> {
         return [&, sqlFile](const Rest::Request& req, Http::ResponseWriter res) {
             handler.handleSelect(sqlFile, req, std::move(res));
         };
     };
-    
+
     // テーブル情報取得API
     // Rest::Routes::Get(router, "/get-category", Rest::Routes::bind(&ApiHandler::getCategory, &handler));
     // カテゴリマスタ取得
     // Rest::Routes::Get(router, "/get-category", makeSelectRoute("sql/select_category.sql"));
+    // カテゴリマスタ取得
     Rest::Routes::Get(router, "/get-category", makeSelectRoute("sql/select_category.sql"));
+    // 商品マスタ取得
     Rest::Routes::Get(router, "/get-product",  makeSelectRoute("sql/select_products.sql"));
-
     // Rest::Routes::Get(router, "/get-category",
     //     Rest::Routes::bind([&](const Rest::Request& req, Http::ResponseWriter res) {
     //         handler.handleSelect("sql/select_category.sql", req, std::move(res));
