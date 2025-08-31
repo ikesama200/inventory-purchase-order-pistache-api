@@ -225,9 +225,16 @@ int main() {
     // カテゴリマスタ取得
     // Rest::Routes::Get(router, "/get-category", makeSelectRoute("sql/select_category.sql"));
     // カテゴリマスタ取得
-    Rest::Routes::Get(router, "/get-category", makeSelectRoute("sql/select_category.sql"));
+    Rest::Routes::Get(router, "/get-category",
+        [&](const Rest::Request& req, Http::ResponseWriter res) {
+            handler.handleSelect("sql/select_category.sql", req, std::move(res));
+        });
+
     // 商品マスタ取得
-    Rest::Routes::Get(router, "/get-product",  makeSelectRoute("sql/select_products.sql"));
+    Rest::Routes::Get(router, "/get-product",
+        [&](const Rest::Request& req, Http::ResponseWriter res) {
+            handler.handleSelect("sql/select_products.sql", req, std::move(res));
+        });
     // Rest::Routes::Get(router, "/get-category",
     //     Rest::Routes::bind([&](const Rest::Request& req, Http::ResponseWriter res) {
     //         handler.handleSelect("sql/select_category.sql", req, std::move(res));
