@@ -209,11 +209,15 @@ int main() {
     //     };
     // };
     // 汎用的なラムダ生成関数
-    auto makeSelectRoute = [&](const std::string& sqlFile) -> std::function<void(const Rest::Request&, Http::ResponseWriter)> {
-        return [&, sqlFile](const Rest::Request& req, Http::ResponseWriter res) {
+    // handleSelect を変更せずにラムダ側で対応する方法
+    auto makeSelectRoute = [&](const std::string& sqlFile)
+        -> std::function<Rest::Route::Result(const Rest::Request&, Http::ResponseWriter)> {
+        return [&, sqlFile](const Rest::Request& req, Http::ResponseWriter res) -> Rest::Route::Result {
             handler.handleSelect(sqlFile, req, std::move(res));
+            return Rest::Route::Result::Ok();
         };
     };
+
 
     // テーブル情報取得API
     // Rest::Routes::Get(router, "/get-category", Rest::Routes::bind(&ApiHandler::getCategory, &handler));
