@@ -54,9 +54,8 @@ public:
         : conn(makeConnStr(config))  // ← DB接続文字列を渡して接続確立
         {}
     // 共通関数: SQLファイルを指定してselctを実行
-    Rest::Route::Result handleSelect(const std::string& sqlFile,
-                                    const Rest::Request& request,
-                                    Http::ResponseWriter response){
+    void handleSelect(const std::string& sqlFile, const Rest::Request& request, Http::ResponseWriter response)
+    {
         try {
             std::string query = loadSqlQuery(sqlFile);
             pqxx::work txn(conn);
@@ -72,11 +71,10 @@ public:
             }
 
             response.send(Http::Code::Ok, result.dump(), MIME(Application, Json));
+
         } catch (const std::exception& e) {
             response.send(Http::Code::Internal_Server_Error, e.what());
         }
-
-        return Rest::Route::Result::Ok();
     }
 
 
@@ -216,9 +214,10 @@ int main() {
     // 汎用的なラムダ生成関数
     auto makeSelectRoute = [&](const std::string& sqlFile) {
         return [&, sqlFile](const Rest::Request& req, Http::ResponseWriter res) {
-            return handler.handleSelect(sqlFile, req, std::move(res));
+            handler.handleSelect(sqlFile, req, std::move(res));
         };
     };
+
 
 
     // テーブル情報取得API
