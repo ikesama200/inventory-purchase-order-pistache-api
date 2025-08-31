@@ -214,7 +214,7 @@ int main() {
             handler.handleSelect(sqlFile, req, std::move(res));
         };
     };
-
+    
     // テーブル情報取得API
     // Rest::Routes::Get(router, "/get-category", Rest::Routes::bind(&ApiHandler::getCategory, &handler));
     // カテゴリマスタ取得
