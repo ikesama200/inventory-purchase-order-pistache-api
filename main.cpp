@@ -53,28 +53,23 @@ public:
     explicit ApiHandler(const std::unordered_map<std::string, std::string>& config)
         : conn(makeConnStr(config))  // ← DB接続文字列を渡して接続確立
         {}
-    // SELECT
-    void handleSelect(const Rest::Request&, Http::ResponseWriter response) {
+    // 共通関数: SQLファイルを指定してselctを実行
+    void handleSelect(const std::string& sqlFile, 
+                      const Rest::Request&, Http::ResponseWriter response) {
         try {
-            std::string query = loadSqlQuery("sql/select.sql");
+            std::string query = loadSqlQuery(sqlFile);
             pqxx::work txn(conn);
             pqxx::result r = txn.exec(query);
-            txn.commit();
 
-            std::stringstream ss;
-            ss << "[";
-            for (auto row = r.begin(); row != r.end(); ++row) {
-                if (row != r.begin()) ss << ",";
-                ss << "{";
-                for (auto field = row.begin(); field != row.end(); ++field) {
-                    if (field != row.begin()) ss << ",";
-                    ss << "\"" << field.name() << "\":\"" << field.c_str() << "\"";
+            json result = json::array();
+            for (auto row : r) {
+                json obj;
+                for (auto field : row) {
+                    obj[field.name()] = field.c_str() ? field.c_str() : "";
                 }
-                ss << "}";
+                result.push_back(obj);
             }
-            ss << "]";
-
-            response.send(Http::Code::Ok, ss.str(), MIME(Application, Json));
+            response.send(Http::Code::Ok, result.dump(), MIME(Application, Json));
         } catch (const std::exception& e) {
             response.send(Http::Code::Internal_Server_Error, e.what());
         }
@@ -208,8 +203,18 @@ int main() {
     ApiHandler handler(config);
 
     // テーブル情報取得API
-    Rest::Routes::Get(router, "/get-category", Rest::Routes::bind(&ApiHandler::getCategory, &handler));
+    // Rest::Routes::Get(router, "/get-category", Rest::Routes::bind(&ApiHandler::getCategory, &handler));
+    // カテゴリマスタ取得
+    Rest::Routes::Get(router, "/get-category", 
+        [&](const Rest::Request& req, Http::ResponseWriter res) {
+            handler.handleSelect("sql/select_category.sql", req, std::move(res));
+        });
 
+    // 商品マスタ取得
+    Rest::Routes::Get(router, "/get-product", 
+        [&](const Rest::Request& req, Http::ResponseWriter res) {
+            handler.handleSelect("sql/select_products.sql", req, std::move(res));
+        });
     // テーブル書き込みAPI
 
     // samapleAPI
