@@ -212,12 +212,19 @@ int main() {
     //     };
     // };
     // 汎用的なラムダ生成関数
-    auto makeSelectRoute = [&](const std::string& sqlFile) {
-        return [&, sqlFile](const Rest::Request& req, Http::ResponseWriter res) {
-            handler.handleSelect(sqlFile, req, std::move(res));
+    auto makeSelectRoute = [&handler](const std::string& sqlFile) {
+        return [&handler, sqlFile](const Rest::Request& req, Http::ResponseWriter res) -> Rest::Route::Result {
+            try {
+                pqxx::work txn(handler.getConn());
+                std::string query = loadSqlQuery(sqlFile);
+                pqxx::result r = txn.exec(query);
+                res.send(Http::Code::Ok, "success");
+            } catch (const std::exception& e) {
+                res.send(Http::Code::Internal_Server_Error, e.what());
+            }
+            return Rest::Route::Result::Ok;  // ← () は不要
         };
     };
-
 
 
     // テーブル情報取得API
