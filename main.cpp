@@ -205,16 +205,19 @@ int main() {
     // テーブル情報取得API
     // Rest::Routes::Get(router, "/get-category", Rest::Routes::bind(&ApiHandler::getCategory, &handler));
     // カテゴリマスタ取得
-    Rest::Routes::Get(router, "/get-category", 
-        [&](const Rest::Request& req, Http::ResponseWriter res) {
+    Rest::Routes::Get(router, "/get-category",
+        Rest::Routes::bind([&](const Rest::Request& req, Http::ResponseWriter res) {
             handler.handleSelect("sql/select_category.sql", req, std::move(res));
-        });
+        })
+    );
 
     // 商品マスタ取得
-    Rest::Routes::Get(router, "/get-product", 
-        [&](const Rest::Request& req, Http::ResponseWriter res) {
-            handler.handleSelect("sql/select_products.sql", req, std::move(res));
-        });
+    Rest::Routes::Get(router, "/get-product",
+        Rest::Routes::bind([&](const Rest::Request& req, Http::ResponseWriter res) {
+            handler.handleSelect("sql/select_product.sql", req, std::move(res));
+        })
+    );
+
     // テーブル書き込みAPI
 
     // samapleAPI
