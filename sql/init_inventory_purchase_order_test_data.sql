@@ -1,5 +1,6 @@
 -- categories_master
-INSERT INTO categories_master (name)
+TRUNCATE TABLE categories_master RESTART IDENTITY CASCADE;
+INSERT INTO categories_master (category_name)
 VALUES
   ('食品'),
   ('飲料'),
@@ -8,6 +9,7 @@ VALUES
   ('衣料品');
 
 -- products_master
+TRUNCATE TABLE products_master RESTART IDENTITY CASCADE;
 INSERT INTO products_master 
 (product_code, product_name, category_id, created_at, updated_at, updated_userid)
 VALUES
@@ -23,20 +25,23 @@ VALUES
   ('CLOT-002', 'ジーンズ',         5, NOW(), NOW(), 'system');
 
 -- inventory_table
+TRUNCATE TABLE inventory_table RESTART IDENTITY CASCADE;
 INSERT INTO inventory_table (product_id, quantity, last_updated)
 VALUES
-  (1, 100, NOW()),  -- おにぎり
-  (2,  50, NOW()),  -- カップラーメン
-  (3, 200, NOW()),  -- ミネラルウォーター
-  (4, 150, NOW()),  -- コーヒー
-  (5, 300, NOW()),  -- ボールペン
-  (6, 120, NOW()),  -- ノート
-  (7,  80, NOW()),  -- USBケーブル
-  (8,  60, NOW()),  -- イヤホン
-  (9,  70, NOW()),  -- Tシャツ
-  (10, 40, NOW());  -- ジーンズ
+  ((SELECT product_id FROM products_master WHERE product_code = 'FOOD-001'), 100, NOW()),  -- おにぎり
+  ((SELECT product_id FROM products_master WHERE product_code = 'FOOD-002'),  50, NOW()),  -- カップラーメン
+  ((SELECT product_id FROM products_master WHERE product_code = 'DRINK-001'), 200, NOW()),  -- ミネラルウォーター
+  ((SELECT product_id FROM products_master WHERE product_code = 'DRINK-002'), 150, NOW()),  -- コーヒー
+  ((SELECT product_id FROM products_master WHERE product_code = 'STAT-001'), 300, NOW()),  -- ボールペン
+  ((SELECT product_id FROM products_master WHERE product_code = 'STAT-002'), 120, NOW()),  -- ノート
+  ((SELECT product_id FROM products_master WHERE product_code = 'ELEC-001'),  80, NOW()),  -- USBケーブル
+  ((SELECT product_id FROM products_master WHERE product_code = 'ELEC-002'),  60, NOW()),  -- イヤホン
+  ((SELECT product_id FROM products_master WHERE product_code = 'CLOT-001'),  70, NOW()),  -- Tシャツ
+  ((SELECT product_id FROM products_master WHERE product_code = 'CLOT-002'), 40, NOW());  -- ジーンズ
 
 -- purchase_orders
+TRUNCATE TABLE purchase_order_items RESTART IDENTITY CASCADE;
+TRUNCATE TABLE purchase_orders RESTART IDENTITY CASCADE;
 INSERT INTO purchase_orders (order_date, status, created_at, created_userid, updated_at, updated_userid)
 VALUES
   (CURRENT_DATE - INTERVAL '10 days', 1, NOW(), 'user1', NOW(), 'user1'), -- 新規発注
@@ -59,13 +64,16 @@ VALUES
   (3, 8, 15,  CURRENT_DATE + INTERVAL '10 days'); -- イヤホン
 
 -- users
+TRUNCATE TABLE users RESTART IDENTITY CASCADE;
 INSERT INTO users (username, created_at, updated_at)
 VALUES
   ('user1', NOW(), NOW()),
   ('user2', NOW(), NOW()),
   ('admin', NOW(), NOW());
+
 -- code_master
-INSERT INTO code_master (code_category, code_value, code_name, description, sort_order, created_at, updated_at)
+TRUNCATE TABLE code_master RESTART IDENTITY CASCADE;
+INSERT INTO code_master (code_category, code_value, code_name, code_description, sort_order, created_at, updated_at)
 VALUES
   -- ORDER_STATUS
   ('ORDER_STATUS', '1', '新規', '新規登録された発注', 1, NOW(), NOW()),
