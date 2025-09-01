@@ -124,6 +124,71 @@ public:
         }
     }
 
+    // 在庫一覧取得
+    void getInventoryList(const Rest::Request&, Http::ResponseWriter response) {
+        try {
+            std::string query = loadSqlQuery("sql/select_inventory_list.sql");
+            pqxx::work txn(conn);
+            pqxx::result r = txn.exec(query);
+            // txn.commit(); // select処理なのでコメントアウト
+
+            json result = json::array();
+            for (auto row : r) {
+                json obj;
+                for (auto field : row) {
+                    obj[field.name()] = field.c_str() ? field.c_str() : "";
+                }
+                result.push_back(obj);
+            }
+            response.send(Http::Code::Ok, result.dump(), MIME(Application, Json));
+        } catch (const std::exception& e) {
+            response.send(Http::Code::Internal_Server_Error, e.what());
+        }
+    }
+
+    // 発注書一覧取得
+    void getPurchaseOrders(const Rest::Request&, Http::ResponseWriter response) {
+        try {
+            std::string query = loadSqlQuery("sql/select_purchase_orders.sql");
+            pqxx::work txn(conn);
+            pqxx::result r = txn.exec(query);
+            // txn.commit(); // select処理なのでコメントアウト
+
+            json result = json::array();
+            for (auto row : r) {
+                json obj;
+                for (auto field : row) {
+                    obj[field.name()] = field.c_str() ? field.c_str() : "";
+                }
+                result.push_back(obj);
+            }
+            response.send(Http::Code::Ok, result.dump(), MIME(Application, Json));
+        } catch (const std::exception& e) {
+            response.send(Http::Code::Internal_Server_Error, e.what());
+        }
+    }
+
+    // コードマスタ取得
+    void getCodeMaster(const Rest::Request&, Http::ResponseWriter response) {
+        try {
+            std::string query = loadSqlQuery("sql/select_code.sql");
+            pqxx::work txn(conn);
+            pqxx::result r = txn.exec(query);
+            // txn.commit(); // select処理なのでコメントアウト
+
+            json result = json::array();
+            for (auto row : r) {
+                json obj;
+                for (auto field : row) {
+                    obj[field.name()] = field.c_str() ? field.c_str() : "";
+                }
+                result.push_back(obj);
+            }
+            response.send(Http::Code::Ok, result.dump(), MIME(Application, Json));
+        } catch (const std::exception& e) {
+            response.send(Http::Code::Internal_Server_Error, e.what());
+        }
+    }
     // INSERT
     void handleInsert(const Rest::Request& request, Http::ResponseWriter response) {
         try {
@@ -232,6 +297,9 @@ int main() {
     // テーブル情報取得API
     Rest::Routes::Get(router, "/get-category", Rest::Routes::bind(&ApiHandler::getCategory, &handler));
     Rest::Routes::Get(router, "/get-product", Rest::Routes::bind(&ApiHandler::getProducts, &handler));
+    Rest::Routes::Get(router, "/get-inventory-list", Rest::Routes::bind(&ApiHandler::getInventoryList, &handler));
+    Rest::Routes::Get(router, "/get-purchase-orders", Rest::Routes::bind(&ApiHandler::getPurchaseOrders, &handler));
+    Rest::Routes::Get(router, "/get-code-master", Rest::Routes::bind(&ApiHandler::getCodeMaster, &handler));
 
     // テーブル書き込みAPI
 
