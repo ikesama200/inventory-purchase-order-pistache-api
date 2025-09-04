@@ -74,6 +74,12 @@ public:
             }
             ss << "]";
 
+            // CORS 対応
+            response.headers()
+                .add<Http::Header::AccessControlAllowOrigin>("*") // 全オリジン許可
+                .add<Http::Header::AccessControlAllowMethods>("GET, POST, PUT, DELETE, OPTIONS")
+                .add<Http::Header::AccessControlAllowHeaders>("Content-Type");
+
             response.send(Http::Code::Ok, ss.str(), MIME(Application, Json));
         } catch (const std::exception& e) {
             response.send(Http::Code::Internal_Server_Error, e.what());
@@ -140,6 +146,12 @@ public:
                 }
                 result.push_back(obj);
             }
+            // CORS 対応
+            response.headers()
+                .add<Http::Header::AccessControlAllowOrigin>("*") // 全オリジン許可
+                .add<Http::Header::AccessControlAllowMethods>("GET, POST, PUT, DELETE, OPTIONS")
+                .add<Http::Header::AccessControlAllowHeaders>("Content-Type");
+
             response.send(Http::Code::Ok, result.dump(), MIME(Application, Json));
         } catch (const std::exception& e) {
             response.send(Http::Code::Internal_Server_Error, e.what());
