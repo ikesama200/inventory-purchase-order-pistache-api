@@ -219,10 +219,10 @@ public:
     }
     void setCategory(const Rest::Request& request, Http::ResponseWriter response) {
         try {
-            auto body = request.body();
+
             std::string query = loadSqlQuery("sql/insert_category_master.sql");
             auto body = json::parse(request.body());
-            std::string categoryName = body["category_name"];
+            auto categoryName = body["category_name"];
 
             pqxx::work txn(conn);
             txn.exec_params(query, categoryName); 
@@ -235,7 +235,7 @@ public:
     }
     void setProducts(const Rest::Request& request, Http::ResponseWriter response) {
         try {
-            auto body = request.body();
+
             std::string query = loadSqlQuery("sql/insert_products_master.sql");
             auto body = json::parse(request.body());
             auto productCode = body["product_code"];
