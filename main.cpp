@@ -222,7 +222,7 @@ public:
 
             std::string query = loadSqlQuery("sql/insert_category_master.sql");
             auto body = json::parse(request.body());
-            auto categoryName = body["category_name"];
+            std::string categoryName = body["category_name"].get<std::string>();
 
             pqxx::work txn(conn);
             txn.exec_params(query, categoryName); 
@@ -238,10 +238,10 @@ public:
 
             std::string query = loadSqlQuery("sql/insert_products_master.sql");
             auto body = json::parse(request.body());
-            auto productCode = body["product_code"];
-            auto productName = body["product_name"];
-            auto categoryId = body["category_id"];
-            auto updatedUserid = body["updated_userid"];
+            int productCode = body["product_code"];
+            std::string  productName = body["product_name"].get<std::string>();
+            int categoryId = body["category_id"];
+            std::string  updatedUserid = body["updated_userid"].get<std::string>();
 
             pqxx::work txn(conn);
             txn.exec_params(query, productCode, productName, categoryId, updatedUserid); 
