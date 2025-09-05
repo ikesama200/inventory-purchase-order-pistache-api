@@ -217,7 +217,41 @@ public:
             response.send(Http::Code::Internal_Server_Error, e.what());
         }
     }
+    void setCategory(const Rest::Request& request, Http::ResponseWriter response) {
+        try {
+            auto body = request.body();
+            std::string query = loadSqlQuery("sql/insert_category_master.sql");
+            auto body = json::parse(request.body());
+            std::string categoryName = body["category_name"];
 
+            pqxx::work txn(conn);
+            txn.exec_params(query, categoryName); 
+            txn.commit();
+
+            response.send(Http::Code::Ok, "Insert successful");
+        } catch (const std::exception& e) {
+            response.send(Http::Code::Internal_Server_Error, e.what());
+        }
+    }
+    void setProducts(const Rest::Request& request, Http::ResponseWriter response) {
+        try {
+            auto body = request.body();
+            std::string query = loadSqlQuery("sql/insert_products_master.sql");
+            auto body = json::parse(request.body());
+            auto productCode = body["product_code"];
+            auto productName = body["product_name"];
+            auto categoryId = body["category_id"];
+            auto updatedUserid = body["updated_userid"];
+
+            pqxx::work txn(conn);
+            txn.exec_params(query, productCode, productName, categoryId, updatedUserid); 
+            txn.commit();
+
+            response.send(Http::Code::Ok, "Insert successful");
+        } catch (const std::exception& e) {
+            response.send(Http::Code::Internal_Server_Error, e.what());
+        }
+    }
     // UPDATE
     void handleUpdate(const Rest::Request& request, Http::ResponseWriter response) {
         try {
@@ -314,7 +348,9 @@ int main() {
     Rest::Routes::Get(router, "/get-code-master", Rest::Routes::bind(&ApiHandler::getCodeMaster, &handler));
 
     // テーブル書き込みAPI
-
+    Rest::Routes::Post(router, "/get-category", Rest::Routes::bind(&ApiHandler::setCategory, &handler));
+    Rest::Routes::Post(router, "/get-product", Rest::Routes::bind(&ApiHandler::setProducts, &handler));
+    
     // samapleAPI
     Rest::Routes::Get(router, "/hello", Rest::Routes::bind(&ApiHandler::handleHello, &handler));
     //Rest::Routes::Get(router, "/data", Routes::bind(&ApiHandler::handleQuery, this));
